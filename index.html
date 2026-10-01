@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html lang="am">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Tinishu Apol.</title>
+    <style>
+        /* CSS ----------------------------------------- */
+        :root {
+            --bg-dark: #121212;
+            --bg-card: #1e1e24;
+            --primary-gold: #d4af37;
+            --text-light: #f5f5f5;
+            --correct-color: #2e7d32;
+            --wrong-color: #c62828;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Nyala', 'Kefa', 'Abyssinica SIL', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background-color: #000;
+            color: var(--text-light);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        /* Mobile Container Simulation */
+        #mobile-container {
+            width: 100%;
+            max-width: 480px;
+            height: 100vh;
+            background-color: var(--bg-dark);
+            position: relative;
+            overflow-y: auto;
+            overflow-x: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        @media (min-width: 481px) {
+            #mobile-container {
+                height: 90vh;
+                border-radius: 20px;
+                box-shadow: 0 10px 40px rgba(0,0,0,0.8);
+                border: 2px solid #333;
+            }
+        }
+
+        header {
+            background-color: var(--bg-card);
+            padding: 20px;
+            text-align: center;
+            border-bottom: 2px solid var(--primary-gold);
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        header h1 {
+            font-size: 1.5rem;
+            color: var(--primary-gold);
+        }
+
+        .screen {
+            display: none;
+            padding: 20px;
+            flex: 1;
+            animation: fadeIn 0.4s ease-in;
+        }
+
+        .screen.active {
+            display: flex;
+            flex-direction: column;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Start Screen */
+        .start-content {
+            text-align: center;
+            margin-top: 20px;
+            line-height: 1.8;
+        }
+        .start-content p {
+            margin-bottom: 20px;
+            font-size: 1.1rem;
+        }
+        
+        .name-input {
+            width: 100%;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-radius: 10px;
+            border: 2px solid var(--primary-gold);
+            background-color: var(--bg-card);
+            color: var(--text-light);
+            font-size: 1.1rem;
+            text-align: center;
+            outline: none;
+        }
+        
+        button {
+            background-color: var(--primary-gold);
+            color: #000;
+            border: none;
+            padding: 15px 20px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            border-radius: 10px;
+            cursor: pointer;
+            width: 100%;
+            transition: all 0.3s;
+            margin-top: 10px;
+        }
+
+        button:active {
+            transform: scale(0.98);
+        }
+
+        /* Quiz Screen */
+        .status-bar {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            font-size: 1rem;
+            font-weight: bold;
+            color: var(--primary-gold);
+        }
+
+        .progress-bar-container {
+            width: 100%;
+            height: 8px;
+            background-color: #333;
+            border-radius: 4px;
+            margin-bottom: 20px;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background-color: var(--primary-gold);
+            border-radius: 4px;
+            width: 0%;
+            transition: width 0.3s;
+        }
+
+        .question-text {
+            font-size: 1.3rem;
+            line-height: 1.6;
+            margin-bottom: 20px;
+            font-weight: bold;
+        }
+
+        .options-container {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .option-btn {
+            background-color: var(--bg-card);
+            color: var(--text-light);
+            border: 2px solid #444;
+            padding: 15px;
+            font-size: 1.1rem;
+            text-align: left;
+            border-radius: 10px;
+            line-height: 1.4;
+        }
+
+        .option-btn.selected {
+            border-color: var(--primary-gold);
+            background-color: rgba(212, 175, 55, 0.1);
+        }
+
+        .option-btn.correct {
+            background-color: var(--correct-color);
+            border-color: var(--correct-color);
+            color: white;
+        }
+
+        .option-btn.wrong {
+            background-color: var(--wrong-color);
+            border-color: var(--wrong-color);
+            color: white;
+        }
+
+        .option-btn:disabled {
+            cursor: not-allowed;
+            opacity: 0.9;
+        }
+
+        .explanation {
+            display: none;
+            margin-top: 20px;
+            padding: 15px;
+            background-color: rgba(212, 175, 55, 0.15);
+            border-left: 4px solid var(--primary-gold);
+            font-size: 1.05rem;
+            line-height: 1.5;
+            border-radius: 0 8px 8px 0;
+        }
+
+        #next-btn {
+            display: none;
+            margin-top: 20px;
+        }
+
+        /* Result Screen */
+        .result-content {
+            text-align: center;
+            margin-top: 30px;
+        }
+        
+        .result-circle {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            border: 8px solid var(--primary-gold);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 2rem;
+            font-weight: bold;
+            margin: 0 auto 20px;
+        }
+
+        .result-message {
+            font-size: 1.3rem;
+            margin-bottom: 30px;
+        }
+        
+        .telegram-status {
+            margin-top: 20px;
+            font-size: 0.9rem;
+            color: #888;
+        }
+    </style>
+</head>
+<body>
+
+<div id="mobile-container">
+    <header>
+        <h1>TINISHU APOLOGISTICS</h1>
+    </header>
+
+    <!-- Start Screen -->
+    <div id="start-screen" class="screen active">
+        <div class="start-content">
+            <h2 style="color: var(--primary-gold); margin-bottom: 15px;">learn with questions </h2>
+            <p>ሰላመ ክርስቶስ ይብዛላችሁ እስካሁን ያው ስንማማር እንድታነቡ ስንጥር ነበር ዛሬ እነዚህን ጥያቄዎች የማታውቋቸውን ሰርች እያደረጋችሁ አውቃችሁት ስሩ </p>
+            <p>እያንዳንዱ  ትምህርቶችን በአመክንዮ እንድናስተውል የሚያግዝ ነው። ትኩረት </p>
+            
+            <!-- የተማሪው ስም መቀበያ -->
+            <input type="text" id="student-name" class="name-input" placeholder="እባክዎ ስምዎን ያስገቡ..." required>
+            
+            <button onclick="startQuiz()">ፈተናውን ጀምር</button>
+        </div>
+    </div>
+
+    <!-- Quiz Screen -->
+    <div id="quiz-screen" class="screen">
+        <div class="status-bar">
+            <span id="question-count">ጥያቄ: 1/50</span>
+            <span id="score-count">ውጤት: 0</span>
+        </div>
+        <div class="progress-bar-container">
+            <div id="progress-bar" class="progress-bar"></div>
+        </div>
+        
+        <div id="question-text" class="question-text">ጥያቄ እዚህ ይገባል</div>
+        
+        <div id="options-container" class="options-container">
+            <!-- Options dynamically added here -->
+        </div>
+
+        <div id="explanation-box" class="explanation"></div>
+        
+        <button id="next-btn" onclick="nextQuestion()">ቀጣይ ጥያቄ</button>
+    </div>
+
+    <!-- Result Screen -->
+    <div id="result-screen" class="screen">
+        <div class="result-content">
+            <h2 style="color: var(--primary-gold); margin-bottom: 20px;">የፈተናው ማጠቃለያ</h2>
+            <div class="result-circle" id="final-score-circle">0/50</div>
+            <div class="result-message" id="result-message"></div>
+            <button onclick="location.reload()">እንደገና ጀምር</button>
+            <div id="telegram-status" class="telegram-status">ውጤትዎ በመላክ ላይ ነው...</div>
+        </div>
+    </div>
+</div>
+
+<script>
+/* JavaScript ----------------------------------------- */
+// የጥያቄዎቹ ዳታ (እንደነበረ)
+const quizData = [
+    // 1-15: እግዚአብሔር መኖር (Existence of God)
+    { q: "የ'ምክንያት እና ውጤት' (Cosmological Argument) አመክንዮ የእግዚአብሔርን መኖር ሲያስረዳ መሠረታዊ መከራከሪያው ምንድን ነው?", options: ["ሀ) ዓለም በድንገት እና በዘፈቀደ ተፈጠረች", "ለ) በዓለም ላይ ያለ እያንዳንዱ ውጤት የመጀመሪያ ምክንያት አለው፤ እርሱም ራሱ ምክንያት የሌለው የመጀመሪያ ምክንያት (Uncaused Cause) ነው", "ሐ) የሰው ልጅ ህሊና ስለ ፈጣሪ ስለሚያስብ ብቻ አምላክ አለ", "መ) ሁሉም ነገር ከምንም ተነሥቶ ወደ መሆን ስለመጣ"], ans: 1, exp: "የምክንያትና ውጤት አመክንዮ (Cosmological argument) ማንኛውም መነሻ ያለው ነገር አድራጊ እንዳለው እና ይህ ሰንሰለት መጨረሻ ወደሌለው ወደ ኋላ እንደማይሄድ፣ ስለዚህ ያልተፈጠረ የመጀመሪያ ምክንያት (እግዚአብሔር) እንዳለ ያስረዳል።" },
+    { q: "የሥነ-ዓላማ ወይም የንድፍ (Teleological Argument) አመክንዮ መነሻ ሃሳብ የትኛው ነው?", options: ["ሀ) የፍጥረት ዓለም ያለው ውስብስብና የተናበበ ሥርዓት ታላቅ ንድፍ አውጪ (Intelligent Designer) እንዳለው ያሳያል", "ለ) የሰው ልጅ የሞራል ሕግጋት ከፈጣሪ የተሰጡ ናቸው", "ሐ) አምላክ በመኖሩ ላይ ማሰብ መኖሩን ያረጋግጣል", "መ) ፍጥረታት በጊዜ ሂደት ራሳቸውን እያሻሻሉ መጥተዋል"], ans: 0, exp: "ቴሌኦሎጂካል አመክንዮ አጽንኦት የሚሰጠው በዓለም ላይ ለሚታየው ድንቅ ሥርዓት፣ ሕግ እና ዓላማ ነው። ይህ የተስተካከለ ንድፍ ባለቤት (ንድፍ አውጪ) እንዳለው ያረጋግጣል።" },
+    { q: "የሞራል አመክንዮ (Moral Argument) የእግዚአብሔርን መኖር እንዴት ያረጋግጣል?", options: ["ሀ) ሰዎች ሁሉ መልካም ስለሆኑ", "ለ) ሰዎች ክፉ በመሆናቸው ፈጣሪ ሊቀጣቸው ይገባል", "ሐ) ፍጹም የሆነ የሞራል ሕግ (Objective Morality) በሰው ልጆች ዘንድ መኖሩ፣ ሕግ ሰጭው (Lawgiver) መኖሩን አመላካች ነው", "መ) ሕግ በየባህሉ ስለሚለያይ ፈጣሪ አንድ ብቻ መሆኑን ያሳያል"], ans: 2, exp: "የሞራል አመክንዮ የሚያስረዳው ፍጹም እና ተለዋዋጭ ያልሆኑ የሞራል እውነታዎች (ለምሳሌ፡ ንፁህ ሰውን መግደል ስህተት ነው) መኖራቸው፣ እነዚህን ሕጎች የደነገገ ፍጹም የሆነ ህግ-ሰጭ (እግዚአብሔር) መኖሩን ነው።" },
+    { q: "የህልውና አመክንዮ (Ontological Argument) የእግዚአብሔርን መኖር በምን መንገድ ይገልጻል?", options: ["ሀ) ከታሪካዊ ማስረጃዎች በመነሳት", "ለ) 'ከእርሱ የበለጠ ሊታሰብ የማይችል ፍጹም አካል' የሚለው ጽንሰ-ሀሳብ በአእምሮ ብቻ ሳይሆን በገሃድ መኖር እንዳለበት በማስረዳት", "ሐ) በተፈጥሮ ጥናት ምርምር (ሳይንስ) ላይ በመመሥረት", "መ) በሰው እና በመላእክት መካከል ያለውን ልዩነት በማጥናት"], ans: 1, exp: "አንሴልም (Anselm) ያቀረበው ይህ አመክንዮ፤ ፈጣሪ ፍጹም በመሆኑ፣ ፍጹምነት ደግሞ በሃሳብ ብቻ መሆንን ሳይሆን በገሃድ (in reality) መኖርንም ስለሚያካትት አምላክ መኖር አለበት ይላል።" },
+    { q: "ፈጣሪ 'ዘለዓለማዊ ነው' (Eternal) ሲባል የጊዜን ጽንሰ-ሀሳብ እንዴት ይገነዘበዋል?", options: ["ሀ) ከጊዜ ጋር አብሮ የሚጓዝ ግን የማይሞት ነው", "ለ) ጊዜን የፈጠረ፣ ከጊዜ ውጪ የሆነ እና ያለፈው፣ ያለውና የሚመጣው በእርሱ ዘንድ አንድ የሆነ (Timeless)", "ሐ) ጊዜን ማቆም የሚችል በጊዜ ውስጥ ያለ አካል ነው", "መ) ጊዜ ለእርሱም ቀስ ብሎ ይጓዛል"], ans: 1, exp: "እግዚአብሔር ጊዜን የፈጠረ ስለሆነ በጊዜ አይለካም። ያለፈው፣ አሁን እና ወደፊት በእርሱ ዘንድ አሁን (Eternal present) ናቸው እንጂ እንደ እኛ ጊዜ አያልፍበትም።" },
+    { q: "እግዚአብሔር 'ሁሉን ቻይ' (Omnipotent) ነው ሲባል ትክክለኛው አመክንዮአዊ ፍቺ ምንድን ነው?", options: ["ሀ) አቅም የሚጠይቁ ማናቸውንም ነገሮች፣ ሎጂክን የሚጻረሩትንም (ለምሳሌ ባለአራት ማዕዘን ክብ መፍጠር) ማድረግ ይችላል", "ለ) ከባሕርዩ እና ከፍጹምነቱ ጋር የሚስማማውን፣ ምክንያታዊ የሆነውን ነገር ሁሉ ማድረግ ይችላል", "ሐ) ክፋትንም ቢሆን መፍጠር እና ማሳደግ ይችላል", "መ) የሰውን ነጻ ፈቃድ ሙሉ በሙሉ በመቆጣጠር ሁሉን ያደርጋል"], ans: 1, exp: "ሁሉን ቻይነት ማለት አምላክ ኃይሉ ገደብ የለውም ማለት እንጂ ከባህሪው ጋር የሚጋጭ (ለምሳሌ መዋሸት) ወይም ሎጂካዊ ቅራኔ ያላቸውን ነገሮች (ክብ ማዕዘን) ያደርጋል ማለት አይደለም።" },
+    { q: "አምላክ ሁሉን አዋቂ (Omniscient) ከሆነ የሰው ልጅ ነፃ ፈቃድ (Free Will) እንዴት ይኖረዋል ለሚለው አመክንዮአዊ ጥያቄ ትክክለኛው ምላሽ የትኛው ነው?", options: ["ሀ) አምላክ ሁሉን የሚያውቀው የሰውን ምርጫ አስቀድሞ በመወሰን (Predestination) ስለሆነ ነጻ ፈቃድ የለም", "ለ) እግዚአብሔር የሰውን ምርጫ አስቀድሞ ማወቁ፣ ሰው በራሱ ያን ምርጫ እንዳያደርግ አያስገድደውም፤ ማወቅ መወሰን አይደለም", "ሐ) አምላክ የሰውን የወደፊት ምርጫ አያውቅም፣ ሲያደርገው ብቻ ያያል", "መ) ነጻ ፈቃድ የሚባል ነገር በሃይማኖት ውስጥ ቦታ የለውም"], ans: 1, exp: "የእግዚአብሔር ቅድመ-ዕውቀት (Foreknowledge) በሰው ላይ ጫና አያመጣም። አንድ ሰው ምን እንደሚመርጥ ፈጣሪ ከጊዜ ውጪ ሆኖ ማወቁ፣ የሰውየውን ነጻ መራጭነት አይሽረውም። ማወቅ (Knowing) ማስገደድ (Causing) አይደለም።" },
+    { q: "የክፋት ችግር (Problem of Evil) 'አምላክ ሁሉን ቻይ እና መሐሪ ከሆነ ክፋት ለምን ኖረ?' ለሚለው አንዱ ፍልስፍናዊ መልስ የትኛው ነው?", options: ["ሀ) ክፋት ከእግዚአብሔር ቁጥጥር ውጪ የሆነ የራሱ ኃይል አለው", "ለ) እውነተኛ ፍቅር እና መልካምነት እንዲኖር ምርጫ (ነጻ ፈቃድ) ግድ ነው፤ ክፋትም የዚህ ነጻ ፈቃድ መጓደል ወይም በተቃራኒው መጠቀም ውጤት ነው", "ሐ) እግዚአብሔር ራሱ ክፋትን ስለፈጠረ ነው", "መ) ክፋት የሚባል ነገር የለም፣ የሰው አእምሮ ፈጠራ ነው"], ans: 1, exp: "ነጻ ፈቃድ (Free will defense) የክፋትን መኖር ያብራራል። አምላክ የፈጠረው ማሽንን ሳይሆን መምረጥ የሚችልን ሰው ነው። እውነተኛ መታዘዝና ፍቅር መምረጥ ሲቻል ብቻ ይገኛል፤ ክፋትም የመልካምነት እጦት እንጂ የራሱ ህልውና ያለው ፍጥረት አይደለም።" },
+    { q: "እግዚአብሔር 'በሁሉ ቦታ የሚገኝ' (Omnipresent) ነው ሲባል የቦታ ጽንሰ ሀሳብ እንዴት ይገለጻል?", options: ["ሀ) እግዚአብሔር እንደ አየር ተበታትኖ በሁሉ ቦታ ይገኛል", "ለ) ግማሽ አካሉ በሰማይ ግማሹ በምድር ነው", "ሐ) በየትኛውም የቦታ እና የጠፈር ክፍል ውስጥ ሙሉ ህልውናው (በሙሉነት) ይገኛል፣ ቦታ አይወስነውም", "መ) የሚገኘው በመንፈሳዊ ሰዎች ልብ ውስጥ ብቻ ነው"], ans: 2, exp: "መለኮት አይከፈልም። በሁሉ ቦታ ይገኛል ሲባል ተበታትኖ ሳይሆን በሁሉ ስፍራ በሙሉ ህልውናው፣ ምንም ሳይጎድልበት ይገኛል ማለት ነው።" },
+    { q: "አግኖስቲሲዝም (Agnosticism) ከኤቲዝም (Atheism) በምን ይለያል?", options: ["ሀ) ሁለቱም ፈጣሪ የለም ይላሉ", "ለ) አግኖስቲሲዝም 'የአምላክን መኖር ወይም አለመኖር የሰው አእምሮ በእርግጠኝነት ማወቅ አይችልም' ሲል ኤቲዝም ግን 'አምላክ የለም' ብሎ ይደመድማል", "ሐ) ኤቲዝም በሳይንስ ሲያምን አግኖስቲሲዝም በጣዖት ያምናል", "መ) አግኖስቲሲዝም ፈጣሪን ያምናል ግን ሃይማኖት አይቀበልም"], ans: 1, exp: "አግኖስቲክስ የእግዚአብሔርን ህልውና ማረጋገጥም ሆነ ማስተባበል አይቻልም (Unknown/Unknowable) ብለው ሲያምኑ፣ ኤቲስቶች ግን ሙሉ በሙሉ ፈጣሪ የለም ብለው ይክዳ።" },
+    // 11-20: አእማደ ምስጢር - መግቢያ እና ባሕርይ
+    { q: "የኦርቶዶክስ ተዋሕዶ ቤተክርስቲያን መሠረት የሆኑት 'አእማደ ምስጢር' (የምስጢር አምዶች) ስንት ናቸው?", options: ["ሀ) ሦስት", "ለ) አምስት", "ሐ) ሰባት", "መ) አሥር"], ans: 1, exp: "አእማደ ምስጢር አምስት ናቸው፡ ምስጢረ ሥላሴ፣ ምስጢረ ሥጋዌ፣ ምስጢረ ጥምቀት፣ ምስጢረ ቁርባን፣ እና ምስጢረ ትንሣኤ ሙታን።" },
+    { q: "በምስጢረ ሥላሴ አስተምህሮ 'አካል' (Hypostasis) እና 'ባሕርይ' (Ousia/Essence) ልዩነታቸው ምንድን ነው?", options: ["ሀ) ሁለቱም አንድ ትርጉም አላቸው", "ለ) አካል ሦስትነታቸውን ሲገልጽ፣ ባሕርይ ደግሞ መለኮታዊ አንድነታቸውን ይገልጻል", "ሐ) አካል አንድነታቸውን፣ ባሕርይ ሦስትነታቸውን ያመለክታል", "መ) አካል ስጋዊነትን፣ ባሕርይ መንፈሳዊነትን ይገልጻል"], ans: 1, exp: "በሥላሴ ትምህርት 'ባሕርይ' (Essence/Nature) አንድ መለኮትን (አምላክነትን) ያመለክታል። 'አካል' (Person/Hypostasis) ደግሞ አብ፣ ወልድ፣ መንፈስ ቅዱስን የየራሳቸው ፍጹም ገጽታ (Personhood) መሆኑን ይገልጻል።" },
+    { q: "የሥላሴ 'አንድነት' በየትኞቹ መገለጫዎች ይረጋገጣል?", options: ["ሀ) በስም፣ በአካል፣ በግብር", "ለ) በመልክ፣ በጥበብ፣ በቦታ", "ሐ) በባሕርይ፣ በህልውና፣ በፈቃድ፣ በስልጣን (በመለኮት)", "መ) በመወለድ፣ በማስረጽ"], ans: 2, exp: "ሥላሴ በባሕርይ፣ በመለኮት፣ በፈቃድ፣ በሥልጣን፣ በአገዛዝ፣ በህልውና (በመኖር) አንድ ናቸው እንጂ አይለያዩም።" },
+    { q: "የሥላሴ 'ሦስትነት' በምን በምን ይገለጻል?", options: ["ሀ) በስም፣ በአካል፣ በግብር (በኩነት)", "ለ) በባሕርይ፣ በሥልጣን፣ በኃይል", "ሐ) በዘመን፣ በመጠን፣ በዕድሜ", "መ) በእውቀት፣ በቦታ፣ በፈቃድ"], ans: 0, exp: "ሥላሴ ሦስት የሚባሉት በስም (አብ፣ ወልድ፣ መንፈስ ቅዱስ)፣ በአካል (የአብ አካል፣ የወልድ አካል፣ የመንፈስ ቅዱስ አካል) እና በግብር ወይም በኩነት (አብ ወላዲ/አስራፂ፣ ወልድ ተወላዲ፣ መንፈስ ቅዱስ ሠራፂ) ነው።" },
+    { q: "በሥላሴ የግብር (የኩነት) ሦስትነት መሠረት 'የአብ' ግብር ምንድን ነው?", options: ["ሀ) መወለድ", "ለ) መስረጽ", "ሐ) መውለድ እና ማስረጽ", "መ) መወለድ እና ማስረጽ"], ans: 2, exp: "አብ አባት ነው፣ የባሕርይ ግብሩ (የራሱ የሆነው መለያው) ወልድን መውለድ፣ መንፈስ ቅዱስን ደግሞ ማስረጽ ነው።" },
+    { q: "የወልድ ግብር (የግል መለያ) ምንድን ነው?", options: ["ሀ) ከአብ መወለድ", "ለ) ከአብ መስረጽ", "ሐ) መውለድ", "መ) ማስረጽ"], ans: 0, exp: "ወልድ ከአብ የተወለደ (Begotten) ነው እንጂ አልፈጠረም፣ አላስረጸምም። የወልድ ግብር 'መወለድ' ነው።" },
+    { q: "የመንፈስ ቅዱስ ግብር ምንድን ነው?", options: ["ሀ) መወለድ", "ለ) ከአብ መስረጽ (Proceeding)", "ሐ) መውለድ እና መስረጽ", "መ) ማሳደግ"], ans: 1, exp: "መንፈስ ቅዱስ ከአብ የሰረጸ (Proceeds from the Father) እንጂ አልተወለደም። ይህ የራሱ አካላዊ ግብር ነው።" },
+    { q: "ሥላሴ 'በዘመን አይቀዳደሙም' (Co-eternal) ሲባል ፍልስፍናዊ እና ሥነ-መለኮታዊ ትርጉሙ ምንድን ነው?", options: ["ሀ) አብ መጀመሪያ ነበረ፣ ከዛ ወልድ ተፈጠረ ማለት ነው", "ለ) ወልድ ከመወለዱ በፊት አብ ብቻውን የነበረበት ጊዜ የለም፣ አብ አባት ሆኖ፣ ወልድ ልጅ ሆኖ ለዘላለም አብረው ይኖራሉ", "ሐ) ሦስቱም በተለያየ ጊዜ ተራ በተራ መጡ", "መ) ዘመን የሚቆጠረው ከክርስቶስ ልደት በኋላ ብቻ ነው"], ans: 1, exp: "አብ ወልድን ከመወለዱ በፊት 'አባት' አይባልም ነበር። አምላክ ግን ዘላለም አባት ስለሆነ፣ መቼም ያለ ልጅ (ያለ ወልድ) የነበረበት ጊዜ የለም። ሦስቱም በዘመን ትልቁ ይህኛው ነው አይባባሉም፣ Co-eternal ናቸው።" },
+    { q: "ሥላሴ በሥልጣን (Co-equal) መሆናቸውን የሚያሳየው አመክንዮ የትኛው ነው?", options: ["ሀ) አብ ከወልድ ይበልጣል", "ለ) መንፈስ ቅዱስ ከሁለቱ ያንሳል", "ሐ) አብ፣ ወልድ፣ መንፈስ ቅዱስ በባሕርይ አንድ ስለሆኑ የሥልጣን፣ የኃይል እና የክብር መበላለጥ የለባቸውም", "መ) ሥልጣን ለአብ ብቻ የተሰጠ ነው"], ans: 2, exp: "የመለኮት ባሕርይ ሙሉ በሙሉ በሦስቱም ስላለ፣ አንዳቸው ከአንዳቸው የሚያንሱበት ወይም የሚበልጡበት አንዳች ነገር የለም።" },
+    { q: "የሥላሴን አንድነትና ሦስትነት ከፀሐይ ምሳሌ ጋር ስናመሳስለው 'ክቡ (አካሉ)፣ ብርሃኑ እና ሙቀቱ' ማንን ይወክላሉ?", options: ["ሀ) ክቡ አብን፣ ብርሃኑ ወልድን፣ ሙቀቱ መንፈስ ቅዱስን", "ለ) ክቡ ወልድን፣ ብርሃኑ አብን፣ ሙቀቱ መንፈስ ቅዱስን", "ሐ) ክቡ አብን፣ ብርሃኑ መንፈስ ቅዱስን፣ ሙቀቱ ወልድን", "መ) ፀሐይ የሥላሴ ምሳሌ መሆን አትችልም"], ans: 0, exp: "በአበው ትምህርት ፀሐይ የሥላሴ ምሳሌ ትሆናለች፡ የፀሐይ ክቡ (Disc) አብን፣ ከእርሱ የሚወጣው ብርሃን ወልድን፣ ሙቀቱ ደግሞ መንፈስ ቅዱስን ይወክላል። ፀሐይ ግን በባሕርይዋ አንድ ናት።" },
+    // 21-30: ጥልቀት ያላቸው የሥላሴ አመክንዮዎች (Advanced Trinitarian Logic)
+    { q: "ሞዳሊዝም (Modalism/Sabellianism) የተባለው የኑፋቄ ትምህርት ስህተት ምንድን ነው?", options: ["ሀ) እግዚአብሔር ሦስት የተለያዩ አማልክት ነው ማለቱ", "ለ) አምላክ አንድ አካል ብቻ ሆኖ በብሉይ ኪዳን እንደ አብ፣ በሐዲስ እንደ ወልድ፣ አሁን እንደ መንፈስ ቅዱስ ራሱን ገለጠ ማለቱ", "ሐ) ወልድ ፍጡር ነው ማለቱ", "መ) መንፈስ ቅዱስ የለም ማለቱ"], ans: 1, exp: "ሞዳሊዝም የሥላሴን አካላዊ ሦስትነት (Distinct Persons) በመካድ አንድ አካል በተለያየ ጊዜ የተለያየ 'ጭንብል' (Mode) አደረገ ብሎ ያምናል። ይህ የቤተክርስቲያን ትምህርት አይደለም፤ ሦስቱ አካላት ዘወትር ህልዋን ናቸው።" },
+    { q: "አርዮሳዊነት (Arianism) በአመክንዮው ለምን ተወገዘ?", options: ["ሀ) ወልድን በመካድ", "ለ) 'ወልድ ከአብ ባሕርይ የተገኘ አይደለም፣ ፍጡር ነው፤ ያልነበረበት ጊዜ ነበረ' በማለቱ", "ሐ) መንፈስ ቅዱስን እንደ አምላክ በመቀበሉ", "መ) ሦስት አማልክት አሉ ብሎ በማስተማሩ"], ans: 1, exp: "አርዮስ ወልድን ፍጡር አድርጎ በማስተማር 'ያልነበረበት ጊዜ ነበረ' (There was a time when He was not) በማለቱ የመለኮትን ፍጹምነትና የዘላለም አብሮነት ስለካደ ተወግዟል።" },
+    { q: "በትስብእት (Incarnation) ጊዜ፣ ከሦስቱ አካላት አንዱ ወልድ ሥጋን ሲለብስ የሥላሴ አንድነት ለምን አልተከፋፈለም?", options: ["ሀ) አብ እና መንፈስ ቅዱስም አብረው ስጋ ስለለበሱ", "ለ) ወልድ ስጋ የለበሰው በህልውና ከአብና ከመንፈስ ቅዱስ ጋር በአንድነት ሆኖ፣ በመለኮታዊ ባሕርዩ ሳይወሰን በመሆኑ", "ሐ) ወልድ ሥጋ ሲለብስ መለኮትነቱን ስለተወ", "መ) ሥጋ መልበስ ምትሃት ስለነበር"], ans: 1, exp: "አንዱ አካል (ወልድ) ሥጋን ቢለብስም፣ መለኮታዊ ባሕርዩ በሁሉ ቦታ የሞላ በመሆኑ፣ የሥላሴ አንድነትም ሆነ መለኮት አይከፋፈልም፤ ህልውናው (Perichoresis) የማይነጣጠል ነው።" },
+    { q: "'ፔሪኮሬሲስ' (Perichoresis) ወይም በአማርኛ 'መተላለፍ / መዋሐድ' በሥላሴ ትምህርት ምንን ይገልጻል?", options: ["ሀ) አካላት እርስ በርስ ያላቸውን መለያየት", "ለ) ሦስቱ አካላት ሳይቀላቀሉ እና ሳይለያዩ እርስ በርሳቸው በሙሉ ህልውና መኖራቸውን (አብ በወልድ፣ ወልድ በአብ... መኖሩን)", "ሐ) ሥላሴ ወደ አንድ አካልነት መቀየራቸውን", "መ) መለኮት በሰው ልጅ ውስጥ መኖሩን"], ans: 1, exp: "ፔሪኮሬሲስ (Mutual indwelling) የሚያሳየው ሥላሴ በህልውና አንድ በመሆናቸው አብ በወልድ፣ ወልድ በአብ፣ መንፈስ ቅዱስ በሁለቱም ያለ መነጣጠል ሕልው መሆናቸውን ነው።" },
+    { q: "ሦስቱ የሥላሴ አካላት የራሳቸው የሆነ የተለየ ሥራ (ግብር) ሲኖራቸው፣ የመፍጠር ሥራ ግን...", options: ["ሀ) የአብ ብቻ ነው", "ለ) የወልድ ብቻ ነው", "ሐ) የመንፈስ ቅዱስ ብቻ ነው", "መ) የሦስቱም የጋራ (የባሕርይ) ሥራ ነው"], ans: 3, exp: "በኦርቶዶክስ ትምህርት ማናቸውም ከሥላሴ ውጪ የሚደረጉ ሥራዎች (Opera ad extra) ለምሳሌ መፍጠር፣ ማዳን፣ ማስተዳደር የሦስቱም የጋራ መለኮታዊ ሥራዎች ናቸው።" },
+    { q: "ትሪቴይዝም (Tritheism / ሦስት አማልክት) የሚባለው አመክንዮአዊ ስህተት በምን ይገለጻል?", options: ["ሀ) አብ፣ ወልድ፣ መንፈስ ቅዱስ የተለያዩ እና የተነጣጠሉ ሦስት ባሕርያት (አማልክት) ናቸው ብሎ ማመን", "ለ) አምላክ አንድ ብቻ ነው ብሎ ማመን", "ሐ) ወልድ አልተወለደም ብሎ ማመን", "መ) መንፈስ ቅዱስ ከአብ እና ከወልድ ይሰርጻል ብሎ ማመን"], ans: 0, exp: "ትሪቴይዝም የሥላሴን አንድ ባሕርይ (One Essence) በመካድ፣ ልክ እንደ ሦስት የተለያዩ ሰዎች፣ ሦስት አማልክት አሉ የሚል የተሳሳተ ፍልስፍና ነው።" },
+    { q: "በሥላሴ ዘንድ 'መቀዳደም (Subordination)' አለ ወይ?", options: ["ሀ) አዎ፣ አብ ይበልጣል", "ለ) አዎ፣ አብ ያዛል ወልድ ይታዘዛል", "ሐ) የለም፣ ሦስቱም በክብር፣ በሥልጣን እና በዘመን እኩል (Co-equal, Co-eternal) ናቸው", "መ) አዎ፣ መንፈስ ቅዱስ ያንሳል"], ans: 2, exp: "በሥላሴ ዘንድ የበላይ እና የበታች (Ontological Subordination) የለም። ሁሉም በእኩልነት አንድ መለኮት ናቸው። አብ ወላዲ መሆኑ የበላይ አያደርገውም።" },
+    { q: "የእግዚአብሔር 'በአእምሮ አለመመረመር' (Incomprehensibility) ሲባል...", options: ["ሀ) ስለ እግዚአብሔር ምንም ማወቅ አንችልም ማለት ነው", "ለ) እግዚአብሔር የለም ማለት ነው", "ሐ) የሰው ልጅ አእምሮ ውስን በመሆኑ የእግዚአብሔርን ሙሉ ባሕርይ ዘርዝሮ ሊጨርሰው እና በሙላት ሊረዳው አይችልም ማለት ነው", "መ) ማወቅ የሚቻለው በሳይንስ ብቻ ነው ማለት ነው"], ans: 2, exp: "አምላክን ማወቅ እንችላለን (በተገለጠልን መጠን)፣ ነገር ግን ፍጹም የሆነውን አምላክ ውስን የሆነው አእምሮአችን ሙሉ በሙሉ አቅፎ ሊመረምረው አይችልም።" },
+    { q: "መጽሐፍ ቅዱስ 'እግዚአብሔርን ያየው ማንም የለም' ሲል፣ በብሉይ ኪዳን ነቢያት አዩት የሚባለው እንዴት ይታረቃል?", options: ["ሀ) ነቢያት ዋሽተዋል", "ለ) ነቢያት ያዩት መለኮታዊ ባሕርዩን (Essence) ሳይሆን፣ ለክብሩ የተገለጠውን ብርሃን፣ ምሳሌ ወይም መላእክትን (Theophany) ነው", "ሐ) እግዚአብሔር አካላዊ ቅርጽ አለው", "መ) አዲስ ኪዳን ብሉይ ኪዳንን ይቃረናል"], ans: 1, exp: "የእግዚአብሔርን ጥልቅ ባሕርይ (Essence) ማንም አላየም። ነቢያት ያዩት ነገር ግን አምላክ ራሱን በፈቀደው መጠን የገለጠበትን ክብር (Energies/Theophany) ነው።" },
+    { q: "'አብ ወልድን ወለደ' ሲባል ሰዋዊ ከሆነው መውለድ በምን ይለያል?", options: ["ሀ) በጊዜ፣ በመለወጥ እና ሕማም ባለበት ሁኔታ አይደለም፤ ከዘላለም ያለ ሕማምና ያለ ጊዜ የሆነ መውለድ ነው", "ለ) ምንም አይለይም፣ ልክ እንደ ሰው ነው", "ሐ) አብ ቀድሞ ነበረ፣ በኋላ ወለደ ማለት ነው", "መ) መውለድ ማለት መፍጠር ማለት ነው"], ans: 0, exp: "የሥላሴ መወለድና መስረጽ መንፈሳዊ እና ከዘላለም የሆነ (Eternal generation) ነው። መለወጥ፣ ሕማም፣ ወይም ቅደም ተከተል (ጊዜ) የለበትም።" },
+    // 31-40: የሥላሴ ምሳሌዎችና የቃል ትርጓሜዎች
+    { q: "ሰው በሥላሴ አምሳል ተፈጥሯል ሲባል አንድነቱ እና ሦስትነቱ እንዴት ይገለጻል?", options: ["ሀ) ሥጋ፣ አጥንት፣ ደም", "ለ) ልብነት (አብ)፣ ቃልነት (ወልድ)፣ እስትንፋስነት/ሕይወት (መንፈስ ቅዱስ) አንድ ሰው እንደሆነ", "ሐ) ራስ፣ እጅ፣ እግር", "መ) ሦስት ሰዎች አንድ ላይ ሆነው"], ans: 1, exp: "የሰው ልጅ ነባቢት ነፍስ ሦስት ኩነት አላት፡ ልብ (ማሰብ)፣ ቃል (መናገር)፣ ሕይወት/እስትንፋስ (መኖር)። እነዚህ ሦስት ቢሆኑም ነፍስ ግን አንዲት ናት፤ ይህ የሥላሴ አንዱ ምሳሌ ነው።" },
+    { q: "በእሳት ምሳሌነት ሥላሴን ስናስረዳ፣ የትኛው ትክክል ነው?", options: ["ሀ) ነበልባሉ አብ፣ ብርሃኑ ወልድ፣ ሙቀቱ መንፈስ ቅዱስ (አንድ እሳት)", "ለ) ነበልባሉ ወልድ፣ ብርሃኑ አብ፣ ሙቀቱ መንፈስ ቅዱስ", "ሐ) እሳት ሦስት የተለያዩ ነገሮች ነው", "መ) እሳት የሥላሴ ምሳሌ መሆን አይችልም"], ans: 0, exp: "እሳት አንድ ነው፣ ነገር ግን ነበልባል፣ ብርሃን እና ሙቀት አለው። ነበልባሉ አብን፣ ብርሃኑ ወልድን፣ ሙቀቱ መንፈስ ቅዱስን በመወከል የህልውናቸውን አንድነት ያስረዳል።" },
+    { q: "ሥላሴ ሦስት ሲባሉ በ'ቁጥር' ሳይሆን በ'አካል' ነው የሚባለው ለምንድን ነው?", options: ["ሀ) ቁጥር መለኮትን ስለማይገልጽ", "ለ) ቁጥር ሲደመር ይበዛል፣ ሲቀነስ ያንሳል፤ የመለኮት ሦስትነት ግን እንደ ቁጥር ተነጣጥሎ ሦስት አማልክት የሚያሰኝ ስላልሆነ", "ሐ) ሒሳብ በቤተክርስቲያን ስለተከለከለ", "መ) ሦስት የሚለው ቃል ስህተት ስለሆነ"], ans: 1, exp: "በቁጥር ሦስት ካልን መነጣጠልን ያመጣል (1+1+1=3)። የሥላሴ ሦስትነት ግን የባሕርይ ውህደት ያለው ልዩ ሦስትነት (1x1x1=1) እንጂ የሚነጣጠል ሦስትነት አይደለም።" },
+    { q: "'ማህፀነ ድንግልን ያልለቀቀ ትስብእት' ሲባል ምን ማለት ነው?", options: ["ሀ) ወልድ በማህፀን ሲወሰን በሰማይ ዙፋኑ ላይ አልነበረም", "ለ) ወልድ በማህፀን ውስጥ ሆኖም በሰማይም በምድርም (በሁሉ ቦታ) መላነቱን አልተወም", "ሐ) ሥጋን መልበሱ ውሸት ነው", "መ) አብም አብሮ በማህፀን ነበረ"], ans: 1, exp: "አምላክ በቦታ አይወሰንም። ወልድ ሥጋን ለብሶ በማህፀን ዘጠኝ ወር ሲቆይ፣ የመለኮት ርቀቱ እና መላነቱ (Omnipresence) በሰማይም፣ በምድርም ሙሉ ነበር።" },
+    { q: "የሥላሴ ምስጢር 'ከአእምሮ በላይ' (Mystery) መሆኑ፣ 'ኢ-ምክንያታዊ' (Irrational/Illogical) ያደርገዋል?", options: ["ሀ) አዎ፣ ፍልስፍናን እና ሎጂክን ይቃረናል", "ለ) አይደለም፣ ከአእምሮ አቅም በላይ (Supra-rational) ነው እንጂ፣ ሎጂክን የሚቃረን (Irrational) አይደለም", "ሐ) እምነት እና አመክንዮ አብረው አይሄዱም", "መ) አዎ፣ ለማመን ማሰብ ማቆም ያስፈልጋል"], ans: 1, exp: "ምስጢረ ሥላሴ ከሰዎች ውስን አእምሮ በላይ (Beyond human reason/Supra-rational) ነው እንጂ ከተፈጥሮ የሎጂክ ሕግጋት ጋር የሚጋጭ (Irrational) አይደለም።" },
+    { q: "'ከአብ፣ ከወልድ፣ ከመንፈስ ቅዱስ ማን ይበልጣል?' ለሚለው ጥያቄ የቤተክርስቲያን ምላሽ ምንድን ነው?", options: ["ሀ) አብ", "ለ) አንዳቸውም አይበልጡም፣ በአምላክነት (በባሕርይ) እኩል ናቸው", "ሐ) ወልድ፣ ዓለምን ስላዳነ", "መ) መንፈስ ቅዱስ፣ አጽናኝ ስለሆነ"], ans: 1, exp: "በአትናቴዎስ የሃይማኖት መግለጫ (Athanasian Creed) መሠረት 'አንዳቸውም አይበልጡም አያሱምም፣ ሦስቱም በክብር እና በዘላለም እኩል ናቸው' ይላል።" },
+    { q: "በዮሐንስ ወንጌል 'እኔና አብ አንድ ነን' (ዮሐ 10፡30) ሲል፣ ይህ አንድነት ምን ዓይነት አንድነት ነው?", options: ["ሀ) የዓላማ አንድነት ብቻ", "ለ) የባሕርይ፣ የመለኮት እና የኃይል ፍጹም አንድነት (Ontological unity)", "ሐ) የሥጋ አንድነት", "መ) የስም አንድነት"], ans: 1, exp: "እኔና አብ አንድ ነን ሲል፣ የዓላማ ብቻ ሳይሆን የባሕርይ (መለኮት) አንድነት መሆኑን ቤተክርስቲያን ታስተምራለች። አይሁድም ሊወግሩት የፈለጉት 'ሰው ሲሆን ራሱን አምላክ ስላደረገ' ነበር።" },
+    { q: "እግዚአብሔር የማይለወጥ (Immutable) አምላክ ነው። ታዲያ 'ወልድ ሥጋ ሆነ' ሲባል ተለወጠ ማለት አይደለምን?", options: ["ሀ) አዎ መለኮቱ ወደ ሥጋ ተቀየረ", "ለ) አይደለም፣ መለኮቱ ሳይለወጥ፣ ሥጋነቱ ወደ መለኮት ሳይቀየር፣ በተዋሕዶ አንድ ሆነ እንጂ መለኮትነቱ አልተለወጠም (ያለመለወጥ የተደረገ ተዋሕዶ)", "ሐ) ሥጋ ሲለብስ አምላክነቱን ተወ", "መ) የለበሰው እውነተኛ ሥጋ አልነበረም"], ans: 1, exp: "ተዋሕዶ (Hypostatic Union) ማለት መለኮት እና ትስብእት (ሥጋ) ሳይቀላቀሉ፣ ሳይለዋወጡ (Without change) በአንድ አካል እና አኳኋን መዋሃድ ማለት ነው።" },
+    { q: "'መለኮት ሕማም የለበትም' (Impassible) ሲባል፣ በክርስቶስ መስቀል ላይ መከራ መቀበል ጋር እንዴት ይስማማል?", options: ["ሀ) መለኮት ራሱ ታመመ", "ለ) ክርስቶስ የተሰቀለው በመለኮቱ ሳይሆን በተዋሐደው ሰብአዊ ሥጋ (ሰብእና) ነው፤ ነገር ግን በተዋሕዶ ምክንያት የክርስቶስ ሕማም እንለዋለን", "ሐ) መስቀል ላይ ያለው ሥጋ ብቻ ነበር፣ አምላክ አልነበረም", "መ) መከራው ምትሃት ነበር"], ans: 1, exp: "መለኮት አይሞትም፣ አይታመምም። ቃል ሥጋን ሲዋሐድ ግን የሥጋን ሕማምና ሞት የራሱ አደረገ። ስለዚህ በመለኮቱ ሕማም ሳይኖርበት፣ በሥጋው ታመመ።" },
+    { q: "የእግዚአብሔር 'ቀዳማዊ እና ደኃራዊ' (Alpha and Omega) መሆን ትርጉሙ ምንድን ነው?", options: ["ሀ) መጀመሪያና መጨረሻ አለው", "ለ) የሁሉ መነሻ (ፈጣሪ) እርሱ ነው፣ የሁሉ መድረሻና ፍጻሜም እርሱ ነው፤ ከእርሱ በፊት የነበረ ከእርሱም በኋላ የሚኖር የለም", "ሐ) በጊዜ የተገደበ ነው", "መ) ከሁለት አማልክት የተዋቀረ ነው"], ans: 1, exp: "አልፋ እና ኦሜጋ ማለት የሁሉም ነገር መነሻና (First cause) መድረሻ (Ultimate end) እርሱ ነው ማለት ነው።" },
+    // 41-50: ውስብስብ የአመክንዮ እና አእማደ ምስጢር ፈተናዎች
+    { q: "በሥላሴ ውስጥ 'ፈቃድ' (Will) መነሻው ምንድን ነው?", options: ["ሀ) እያንዳንዱ አካል የየራሱ የተለያየ ፈቃድ አለው (ሦስት ፈቃድ)", "ለ) ፈቃድ የባሕርይ (የመለኮት) ገንዘብ ስለሆነ፣ ሥላሴ አንዲት መለኮታዊ ፈቃድ አላቸው", "ሐ) የአብ ፈቃድ ብቻ ነው የሚፈጸመው", "መ) ፈቃድ በመንፈስ ቅዱስ ላይ ብቻ የተመሰረተ ነው"], ans: 1, exp: "በሥነ-መለኮት 'ፈቃድ' የአካል ሳይሆን የባሕርይ (Nature) መገለጫ ነው። በመሆኑም ሥላሴ አንድ ባሕርይ ስላላቸው ፈቃዳቸውም አንድ ነው።" },
+    { q: "የፓንቴይዝም (Pantheism) ስህተት በእግዚአብሔር ጽንሰ-ሀሳብ ላይ ምንድን ነው?", options: ["ሀ) እግዚአብሔር ሦስት ነው ማለቱ", "ለ) 'ተፈጥሮ (Universe) ራሱ እግዚአብሔር ነው' በማለት ፈጣሪን ከፍጡር ጋር አንድ ማድረጉ", "ሐ) አምላክ ፈጣሪ አይደለም ማለቱ", "መ) መላእክት የሉም ማለቱ"], ans: 1, exp: "ፓንቴይዝም 'ሁሉ አምላክ ነው፣ አምላክም ሁሉ ነው' ይላል። የኦርቶዶክስ ትምህርት ግን ፈጣሪ ከፍጡር የተለየ (Transcendent) እና በሁሉ የመላ (Immanent) መሆኑን ያስተምራል።" },
+    { q: "እግዚአብሔር 'ቀናተኛ አምላክ' (Jealous God) ነው ሲባል ፍልስፍናዊ ትርጉሙ...", options: ["ሀ) እንደ ሰው ቀንቶ ይበሳጫል", "ለ) በሌሎች አማልክት ይደናገጣል", "ሐ) የሰውን ፍቅርና አምልኮ ለሌላ የውሸት አማልክት (ጣዖት) አሳልፎ የማይሰጥ፣ ፍጹም ፍቅርና ቅድስና ያለው መሆኑን ይገልጻል", "መ) ሰዎችን በማስፈራራት ያመልከዋል"], ans: 2, exp: "መለኮታዊ ቅናት ሰዋዊ ከሆነው የምቀኝነት ቅናት ይለያል። አምላክ ሰውን ለዘላለም ሞት አሳልፎ ለመስጠት የማይፈቅድ፣ ፍጹም ፍቅሩን የሚገልጽበት ቃል ነው።" },
+    { q: "ክርስቶስ ሁለት ልደት አለው ሲባል...", options: ["ሀ) ሁለቴ ከድንግል ማርያም ተወልዷል", "ለ) አንዱ ከዘላለም ከአብ ያለ እናት (ቀዳማዊ ልደት)፣ ሁለተኛው በጊዜ ከድንግል ማርያም ያለ አባት (ደኃራዊ ልደት)", "ሐ) አንዱ ልደት መንፈሳዊ ሁለተኛው ሀሳባዊ ነው", "መ) ሁለት የተለያዩ ሰዎች ተወልደዋል ማለት ነው"], ans: 1, exp: "የወልድ ቀዳማዊ ልደት ዘመን የማይቆጠርበት ከአብ መወለዱ ሲሆን፣ ደኃራዊ ልደት ደግሞ ሥጋ ለብሶ ከድንግል ማርያም መወለዱ ነው።" },
+    { q: "በመንፈስ ቅዱስ ላይ የቀረበው የ'ፊሊዮኬ' (Filioque - and the Son) ውዝግብ ምንድን ነው?", options: ["ሀ) መንፈስ ቅዱስ አምላክ አይደለም የሚል ክርክር", "ለ) ምዕራባውያን ቤተክርስቲያን 'መንፈስ ቅዱስ ከአብ እና ከወልድ ይሰርጻል' ማለታቸው፣ እና የምስራቅ ኦርቶዶክስ ደግሞ 'ከአብ ብቻ ይሰርጻል' ብላ መቃወሟ", "ሐ) መንፈስ ቅዱስ ከማርያም ተወለደ የሚል ስህተት", "መ) መንፈስ ቅዱስ ሦስተኛ አምላክ ነው የሚል ኑፋቄ"], ans: 1, exp: "Filioque ማለት 'ከወልድም' ማለት ነው። የኦርቶዶክስ ተዋሕዶ ትምህርት መንፈስ ቅዱስ ከአብ ብቻ እንደሚሰርጽ (ዮሐ 15፡26) በማመን የካቶሊክን 'ከአብና ከወልድ ይሰርጻል' የሚለውን ትምህርት ትቃወማለች።" },
+    { q: "ማሴዶንዮስ (Macedonianism) በማን ላይ የኑፋቄ ትምህርት አስተማረ?", options: ["ሀ) አብ ላይ", "ለ) ወልድ ላይ", "ሐ) መንፈስ ቅዱስ ሕያው አምላክ አይደለም፣ ሕይወት የሌለው ኃይል (Energy) ነው በማለት መንፈስ ቅዱስ ላይ", "መ) ድንግል ማርያም ላይ"], ans: 2, exp: "ማሴዶንዮስ የመንፈስ ቅዱስን አምላክነት በመካድ ፍጡር ወይም ኃይል ብቻ ነው ብሎ በማስተማሩ በቁስጥንጥንያ ጉባኤ (381 ዓ.ም) ተወግዟል።" },
+    { q: "የሥላሴ 'ሦስት ስም' ምንድን ነው?", options: ["ሀ) ፀሐይ፣ ጨረቃ፣ ከዋክብት", "ለ) አብርሃም፣ ይስሐቅ፣ ያዕቆብ", "ሐ) አብ፣ ወልድ፣ መንፈስ ቅዱስ", "መ) ልብ፣ ቃል፣ እስትንፋስ"], ans: 2, exp: "የሥላሴ ሦስትነት መገለጫ የሆነው የስም ሦስትነት፣ መጠሪያቸው አብ፣ ወልድ፣ መንፈስ ቅዱስ መሆኑ ነው።" },
+    { q: "እግዚአብሔር ጻድቅ ፈራጅ (Just) እና መሐሪ (Merciful) መሆኑ እንዴት በአንድነት ይገለጻል?", options: ["ሀ) ሁለቱ ባህሪዎች ይጋጫሉ", "ለ) ጽድቁ ኃጢአትን ሲቀጣ፣ ምሕረቱ ደግሞ በክርስቶስ መስቀል በኩል ለሰው ልጅ ድነትን በማዘጋጀት ፍጹም አንድነትን አሳዩ", "ሐ) አብ ፈራጅ፣ ወልድ መሐሪ ነው", "መ) ምህረት ካለ ፍርድ የለም"], ans: 1, exp: "በመስቀሉ ላይ የእግዚአብሔር ፍጹም ፍርድ (የኃጢአት ደሞዝ ሞት መሆኑ ተረጋገጠ) እና ፍጹም ምሕረቱ (ራሱ ስለ እኛ ሞቶ አዳነን) አብረው ተገልጠዋል።" },
+    { q: "ሥላሴ አንዱ በአንዱ ማደሩ (Mutual Indwelling / Perichoresis) በመጽሐፍ ቅዱስ ቃል ሲረጋገጥ...", options: ["ሀ) 'እኔ በአብ እንዳለሁ አብም በእኔ እንዳለ አታምንምን?' (ዮሐ 14፡10)", "ለ) 'አብ ከእኔ ይበልጣል'", "ሐ) 'በመጀመሪያ ቃል ነበረ'", "መ) 'አምላኬ አምላኬ ለምን ተውከኝ'"], ans: 0, exp: "ክርስቶስ እኔ በአብ እንዳለሁ፣ አብም በእኔ እንዳለ በማለት የሥላሴን የማይነጣጠል የህልውና አንድነት (Perichoresis) አረጋግጧል።" },
+    { q: "በሥላሴ ትምህርት፣ የ'አካል' (Hypostasis) ትክክለኛ መገለጫ ምንድን ነው?", options: ["ሀ) የሚዳሰስ ሥጋዊ ቅርጽ", "ለ) ግዙፍነት እና ክብደት ያለው አካል", "ሐ) ራስን የማወቅ (Self-consciousness)፣ የራሱ የሆነ ማንነት እና ግብር ያለው ፍጹም መለኮታዊ እውነት", "መ) የኃይል ሞገድ"], ans: 2, exp: "አካል ስንል ሥጋን ወይም ግዙፍነትን ማለታችን አይደለም። እያንዳንዱ የሥላሴ አካል ፍጹም ማንነት፣ አዋቂነት እና የራሱ የሆነ ግብር (መውለድ፣ መወለድ፣ መስረጽ) ያለው መሆኑን ነው።" }
+];
+
+// App State
+let currentQuestionIndex = 0;
+let score = 0;
+let answered = false;
+let studentName = ""; // የተማሪው ስም እዚህ ይቀመጣል
+
+// DOM Elements
+const startScreen = document.getElementById('start-screen');
+const quizScreen = document.getElementById('quiz-screen');
+const resultScreen = document.getElementById('result-screen');
+const questionText = document.getElementById('question-text');
+const optionsContainer = document.getElementById('options-container');
+const explanationBox = document.getElementById('explanation-box');
+const nextBtn = document.getElementById('next-btn');
+const questionCount = document.getElementById('question-count');
+const scoreCount = document.getElementById('score-count');
+const progressBar = document.getElementById('progress-bar');
+const nameInput = document.getElementById('student-name');
+
+function startQuiz() {
+    studentName = nameInput.value.trim();
+    if(studentName === "") {
+        alert("እባክዎ መጀመሪያ ስምዎን ያስገቡ!");
+        nameInput.focus();
+        return;
+    }
+
+    startScreen.classList.remove('active');
+    quizScreen.classList.add('active');
+    currentQuestionIndex = 0;
+    score = 0;
+    loadQuestion();
+}
+
+function loadQuestion() {
+    answered = false;
+    const currentQuiz = quizData[currentQuestionIndex];
+    
+    // Update header stats
+    questionCount.innerText = `ጥያቄ: ${currentQuestionIndex + 1}/${quizData.length}`;
+    scoreCount.innerText = `ውጤት: ${score}`;
+    progressBar.style.width = `${((currentQuestionIndex) / quizData.length) * 100}%`;
+    
+    // Set Question
+    questionText.innerText = `${currentQuestionIndex + 1}. ${currentQuiz.q}`;
+    
+    // Clear Options and Explanation
+    optionsContainer.innerHTML = '';
+    explanationBox.style.display = 'none';
+    explanationBox.innerText = '';
+    nextBtn.style.display = 'none';
+    
+    // Create Options
+    currentQuiz.options.forEach((option, index) => {
+        const button = document.createElement('button');
+        button.innerText = option;
+        button.classList.add('option-btn');
+        button.onclick = () => selectOption(index, button);
+        optionsContainer.appendChild(button);
+    });
+}
+
+function selectOption(selectedIndex, selectedButton) {
+    if (answered) return;
+    answered = true;
+    
+    const currentQuiz = quizData[currentQuestionIndex];
+    const buttons = optionsContainer.querySelectorAll('.option-btn');
+    
+    // Check answer
+    if (selectedIndex === currentQuiz.ans) {
+        selectedButton.classList.add('correct');
+        score++;
+        scoreCount.innerText = `ውጤት: ${score}`;
+    } else {
+        selectedButton.classList.add('wrong');
+        // Highlight correct
+        buttons[currentQuiz.ans].classList.add('correct');
+    }
+    
+    // Disable all buttons
+    buttons.forEach(btn => btn.disabled = true);
+    
+    // Show Explanation
+    explanationBox.innerText = `ማብራሪያ፡ ${currentQuiz.exp}`;
+    explanationBox.style.display = 'block';
+    
+    // Show Next Button
+    nextBtn.style.display = 'block';
+    if(currentQuestionIndex === quizData.length - 1) {
+        nextBtn.innerText = "ውጤት ተመልከት";
+    } else {
+        nextBtn.innerText = "ቀጣይ ጥያቄ";
+    }
+}
+
+function nextQuestion() {
+    currentQuestionIndex++;
+    if (currentQuestionIndex < quizData.length) {
+        loadQuestion();
+    } else {
+        showResults();
+    }
+}
+
+function showResults() {
+    quizScreen.classList.remove('active');
+    resultScreen.classList.add('active');
+    progressBar.style.width = `100%`;
+    
+    const finalScoreCircle = document.getElementById('final-score-circle');
+    const resultMessage = document.getElementById('result-message');
+    
+    finalScoreCircle.innerText = `${score}/${quizData.length}`;
+    
+    let percentage = Math.round((score / quizData.length) * 100);
+    let message = "";
+    
+    if(percentage >= 90) {
+        message = "በጣም ግሩም! በአእማደ ምስጢር እና መለኮታዊ አመክንዮ ላይ እጅግ የጠለቀ እውቀት አለዎት።";
+        finalScoreCircle.style.borderColor = "#2e7d32";
+    } else if(percentage >= 70) {
+        message = "ጥሩ አድርገዋል! የሥላሴን ትምህርት በሚገባ ተረድተዋል።";
+        finalScoreCircle.style.borderColor = "#fbc02d";
+    } else if (percentage >= 50) {
+        message = "መካከለኛ ውጤት ነው። ማብራሪያዎቹን በማንበብ እውቀትዎን ያሳድጉ።";
+        finalScoreCircle.style.borderColor = "#f57c00";
+    } else {
+        message = "እባክዎ ስለ አእማደ ምስጢር እና የአምላክ ህልውና ሰፋ ያለ ንባብ ያድርጉ። ማብራሪያዎቹን ልብ ይበሉ።";
+        finalScoreCircle.style.borderColor = "#c62828";
+    }
+    
+    resultMessage.innerText = message;
+
+    // ውጤቱን ወደ ቴሌግራም መላክ (Send to Telegram Bot)
+    sendToTelegram(studentName, score, quizData.length, percentage, message);
+}
+
+function sendToTelegram(name, userScore, totalQuestions, percentage, gradeMessage) {
+    // እርስዎ የሰጡኝ የቴሌግራም ቦት መረጃዎች
+    const botToken = "7492016145:AAE5FOu_aF7DtWu1JhaMla8NHJZssqiIkeM";
+    const chatId = "7388335181";
+
+    // ቴሌግራም ላይ እንደ ፖስተር (Poster) የሚያምር ጽሁፍ ሆኖ እንዲታይ የተሰራ ፎርማት
+    const telegramMessage = `
+🎓 <b>የፈተና ውጤት ሪፖርት</b> 🎓
+➖➖➖➖➖➖➖➖➖➖➖➖
+👤 <b>ተማሪ:</b> ${name}
+✅ <b>ውጤት:</b> ${userScore} / ${totalQuestions}
+📊 <b>ፐርሰንት:</b> ${percentage}%
+📝 <b>ማጠቃለያ:</b> <i>${gradeMessage}</i>
+➖➖➖➖➖➖➖➖➖➖➖➖
+✝️ <b>Tinishu Apologetics</b> ✝️
+`;
+
+    const url = `https://api.telegram.org/bot${botToken}/sendMessage`;
+    const statusDiv = document.getElementById('telegram-status');
+
+    fetch(url, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            chat_id: chatId,
+            text: telegramMessage,
+            parse_mode: 'HTML' // ለቦልድ፣ ለኢታሊክ ቅርጾች
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if(data.ok) {
+            statusDiv.style.color = "#2e7d32";
+            statusDiv.innerText = "✅ ውጤትዎ በተሳካ ሁኔታ ወደ አስተማሪው ተልኳል!";
+        } else {
+            statusDiv.style.color = "#c62828";
+            statusDiv.innerText = "❌ ውጤት መላክ አልተሳካም። ኢንተርኔትዎን ያረጋግጡ።";
+        }
+    })
+    .catch(error => {
+        console.error("Error:", error);
+        statusDiv.style.color = "#c62828";
+        statusDiv.innerText = "❌ የኢንተርኔት ግንኙነት ችግር አጋጥሟል።";
+    });
+}
+</script>
+</body>
+</html>
